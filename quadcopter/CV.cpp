@@ -42,7 +42,7 @@ double calculateDistance(std::vector<KeyPoint> new_key,
     	return 0;
     }
 
-    Ptr<BFMatcher> matcher = BFMatcher::create(NORM_HAMMING);
+    BFMatcher matcher = BFMatcher(NORM_HAMMING);
     std::vector< DMatch > matches;
     matcher.match(new_desc, old_desc, matches);
 
@@ -63,7 +63,7 @@ double calculateDistance(std::vector<KeyPoint> new_key,
 	if (matches[i].distance < min(int (3 * second_min_dist), 100)) {
             Point2f pt_1= new_key.at(matches[i].queryIdx).pt;
 	    Point2f pt_2 = old_key.at(matches[i].trainIdx).pt;
-	    pixel_distances.push_back(euDistance(pt_1, pt_2);
+	    pixel_distances.push_back(euDistance(pt_1, pt_2));
 	    totalPoints++;
 	}
     }
@@ -75,7 +75,7 @@ double calculateDistance(std::vector<KeyPoint> new_key,
   	median = (pixel_distances.at(size / 2) + pixel_distances.at((size / 2) - 1)) / 2;
     }
     else {
-	median = pixel_distances.at((size / 2) + 1);
+	median = pixel_distances.at((size / 2));
     }
 
     return convertX(median, cam_angle, real_height, pix_width);

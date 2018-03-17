@@ -11,6 +11,6 @@ CV.o:
 	$(CXX) $(CXXFLAGS) -o CV.o CV.cpp -c $(OPENCV)
 
 clean:
-	rm -rf CV.O
+	rm -rf CV.o
 	rm -rf speedometer
 	

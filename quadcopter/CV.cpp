@@ -12,6 +12,8 @@
 #define real_height 10 /* in meters */
 #define pix_width 1280
 #define PI 3.14159265358979323846264338327950288419716939937510582097494459230781640628
+#define K_MEANS_CLUSTERS 3
+#define K_MEANS_TRIES 3
 
 using namespace cv;
 double euDistance(cv::Point2f pt1, cv::Point2f pt2);
@@ -34,8 +36,8 @@ std::vector<KeyPoint> keyDetect(Mat img) {
 }
 
 /* Find average pixel distance of matching keypoints */
-double calculateDistance(std::vector<KeyPoint> new_key, 
-				std::vector <KeyPoint> old_key, 
+double calculateDistance(std::vector<KeyPoint> new_key,
+				std::vector <KeyPoint> old_key,
 				Mat new_desc,
 				Mat old_desc) {
     if(old_key.size() == 0 || new_key.size() == 0){
@@ -50,7 +52,7 @@ double calculateDistance(std::vector<KeyPoint> new_key,
     unsigned int totalPoints= 0;
     double min_dist = 100;
     double second_min_dist = -1;
-    std::vector< double > pixel_distances; 
+    std::vector< double > pixel_distances;
 
     for (int i = 0; i < int (matches.size()); i++){
     	if (matches[i].distance < min_dist) {
@@ -61,12 +63,39 @@ double calculateDistance(std::vector<KeyPoint> new_key,
 
     for (unsigned int i = 0; i < size; i++) {
 	if (matches[i].distance < min(int (3 * second_min_dist), 100)) {
-            Point2f pt_1= new_key.at(matches[i].queryIdx).pt;
+      Point2f pt_1= new_key.at(matches[i].queryIdx).pt;
 	    Point2f pt_2 = old_key.at(matches[i].trainIdx).pt;
 	    pixel_distances.push_back(euDistance(pt_1, pt_2));
 	    totalPoints++;
 	}
     }
+		if (pixel_distances.empty()) {
+			return 0.0;
+		}
+		int size_distances = pixel_distances.size();
+		std::vector<int> labels;
+		Mat centers;
+		kmeans(pixel_distances, K_MEANS_CLUSTERS, labels, TermCriteria(),
+               K_MEANS_TRIES, KMEANS_RANDOM_CENTERS, centers);
+		int max_count = 0;
+		int max_label = 0;
+		int cur_count;
+
+		for(int i = 0; i < K_MEANS_CLUSTERS; i++) {
+			cur_count = std::count(labels.begin(), labels.end(), i);
+			if(cur_count > max_count) {
+				max_count = cur_count;
+				max_label = i;
+			}
+		}
+		std::vector< double > good_distances;
+		for(int i = 0; i < size_distances; i++) {
+			if (labels.at(i) == max_label) {
+				good_distances.push_back(pixel_distances.at(i));
+			}
+		}
+		pixel_distances = good_distances;
+
 
     std::sort(pixel_distances.begin(), pixel_distances.end());
     size = pixel_distances.size();

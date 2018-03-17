@@ -52,7 +52,7 @@ double calculateDistance(std::vector<KeyPoint> new_key,
     unsigned int totalPoints= 0;
     double min_dist = 100;
     double second_min_dist = -1;
-    std::vector< double > pixel_distances;
+    std::vector< Point2f > pixel_distances;
 
     for (int i = 0; i < int (matches.size()); i++){
     	if (matches[i].distance < min_dist) {
@@ -65,7 +65,8 @@ double calculateDistance(std::vector<KeyPoint> new_key,
 	if (matches[i].distance < min(int (3 * second_min_dist), 100)) {
       Point2f pt_1= new_key.at(matches[i].queryIdx).pt;
 	    Point2f pt_2 = old_key.at(matches[i].trainIdx).pt;
-	    pixel_distances.push_back(euDistance(pt_1, pt_2));
+			Point2f data_point((euDistance(pt_1, pt_2), angle(pt_1, pt_2)))
+	    pixel_distances.push_back(data_point);
 	    totalPoints++;
 	}
     }
@@ -91,7 +92,7 @@ double calculateDistance(std::vector<KeyPoint> new_key,
 		std::vector< double > good_distances;
 		for(int i = 0; i < size_distances; i++) {
 			if (labels.at(i) == max_label) {
-				good_distances.push_back(pixel_distances.at(i));
+				good_distances.push_back(pixel_distances.at(i).x);
 			}
 		}
 		pixel_distances = good_distances;
@@ -113,6 +114,10 @@ double calculateDistance(std::vector<KeyPoint> new_key,
 /* Finds euclidean distance of matching */
 double euDistance(Point2f pt1, Point2f pt2) {
 	return sqrt(pow(abs(pt2.x - pt1.x), 2) + pow(abs(pt2.y - pt1.y), 2));
+}
+
+double angle(Point2f pt1, Point2f pt2) {
+	return std::atan((double) (pt2.y - pt1.y) / (double)(pt2.x - pt1.x));
 }
 
 /* Convert pixel distance to actual distance */
